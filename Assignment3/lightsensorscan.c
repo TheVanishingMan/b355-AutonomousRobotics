@@ -7,27 +7,26 @@ task main()
 
 while(true) {
 
-int x,y,potsensor;
-x = SensorValue[LightIn];
-potsensor = SensorValue[POT];
+int x,y,ptsens; // x corresponds to the light sensor, y is the servo position corresopnding to the highest value of x, ptsens is the Potentiometer
+x = SensorValue[LightIn]; // take an initial reading of the Light, this will be comared in the for loop
+ptsens = SensorValue[POT];// set ptsens to the value of the Potentiometer
 
-writeDebugStreamLine("%d",x);
-y = -127;
-motor[Servo] = y;
-wait1Msec(1000);
+//writeDebugStreamLine("%d",x); //print the current position of the Servo, mostly for visually representing what is happening in real life.
+writeDebugStreamLine("%d",SensorValue[POT]); //print value of the potentiometer.
+y = -127; // set the initial y value to -127 (minimum), later the for loop will increment this value by 4 each time
+motor[Servo] = y; // set the motor position to be y
+wait1Msec(1000); // wait a second (this is important when the "eye" is reseting)
 
-for(int i= -127; i<127; i=i+4) {
+for(int i= -127; i<127; i=i+4) { // start at -127, increments by 4, "stops at 127" (technically 125)
 
-	motor[Servo] = i;
-	wait1Msec(50);
-	writeDebugStreamLine("The current position is %d", i);
-
-	if (x >= SensorValue[LightIn]) {
+	motor[Servo] = i; // set Servo to the value of i (-127, -123, -119, ... 121, 125)
+	wait1Msec(150); // wait a bit in between the values (for accurate readings)
+	//writeDebugStreamLine("The current position is %d", i);
+	writeDebugStreamLine("potentiometer value is %d", SensorValue[POT]); // print the potentiometer values
+	if (x >= SensorValue[LightIn]) { // compare the initial reading to the
 		x = SensorValue[LightIn];
-		//motor[Servo] = y - 20;
 		y = i;
 		wait1Msec(150);
-		//writeDebugStreamLine("The value of the brightest light is: %d. The brightest position is %d \n", x,y);
 	}
 }
 
@@ -38,126 +37,3 @@ wait1Msec(3000);
 }
 
 }
-/*
-while(true)
-{
-	int x,y;
-
-	motor[Servo] = -127;  //positions the servo motor to one of the extremes; range : -127  to 127
-	wait1Msec(5000); // wait a long time at first to avoid damage
-  x = SensorValue[LightIn]; //change x to be the value of the light at the area
-  writeDebugStreamLine("The value of the light sensor is: %d", x);
-  y = -127;
-
-  motor[Servo] = -107; //rotate to new position
-  wait1Msec(500); //wait to avoid damage
-  if (x <= SensorValue[LightIn]){ //only mark this location as the brightest if it is the brightest
-  	x = LightIn; //new brighest location
-  	writeDebugStreamLine("The value of the light sensor is: %d", x);
-  	y = -107; //if we change this to the brighest remember it for next time
-  	}
-
-  motor[Servo] = -87;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", x);
-  	y = -87;
-  	}
-
-
-  motor[Servo] = -67;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", x);
-  	y = -67;
-  	}
-
-
-  motor[Servo] = -47;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	y = -47;
-  	}
-
-
-  motor[Servo] = -27;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	y = -27;
-  	}
-
-
-  motor[Servo] = -7;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	y = -7;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	}
-
-
-  motor[Servo] = 17;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	y = 17;
-  	}
-
-
-  motor[Servo] = 37;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	y = 37;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	}
-
-
-  motor[Servo] = 57;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	y = 127;
-  	}
-
-
-  motor[Servo] = 77;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	y = 127;
-  	}
-
-
-  motor[Servo] = 97;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	y = 97;
-  	}
-
-
-  motor[Servo] = 117;
-  wait1Msec(500);
-  if(x <= SensorValue[LightIn]){
-  	x = LightIn;
-  	writeDebugStreamLine("The value of the light sensor is: %d", SensorValue[LightIn]);
-  	y = 117;
-  	}
-  	//now look go back to the position where we found the brighest light
-  	motor[Servo] = y;
-  	wait1Msec(1500);
-}
-
-}
-*/
