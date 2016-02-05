@@ -37,7 +37,7 @@ for(int i= -127; i<127; i=i+4) { // start at -127, increments by 4, "stops at 12
 
 motor[Servo] = y;
 writeDebugStreamLine("Now facing brightest position, potentiometer value is %d, the angle is: %d",ptsens,PtoD(ptsens));
-wait1Msec(3000);
+wait1Msec(14000);
 
 }
 
