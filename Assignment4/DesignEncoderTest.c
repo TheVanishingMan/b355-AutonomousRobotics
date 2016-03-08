@@ -9,12 +9,13 @@
 
 /*******************************************************************************/
 
+
 void turnLeft90(int distance) {
 	motor[leftMotor]   =  0;
   motor[rightMotor]  =  0;
   wait1Msec(100);
   SensorValue[rightEncoder] = 0;
-	while(SensorValue(rightEncoder) < distance) { //141.3  or  141.3 - 30
+	while((SensorValue(rightEncoder) < distance) && !SensorValue(followBump)) { //141.3  or  141.3 - 30
 		motor[leftMotor] = 30;
 		motor[rightMotor] = 30;
 	}
@@ -28,7 +29,6 @@ void turnRight90(int distance) {
   wait1Msec(100);
   SensorValue[leftEncoder] = 0;
 	while(SensorValue(leftEncoder) < distance) { //141.3  or  141.3 - 30
-
 		motor[leftMotor] = -30;
 		motor[rightMotor] = -30;
 	}
@@ -42,8 +42,8 @@ void moveForward(int distance) {
 	wait1Msec(200);
 	SensorValue[rightEncoder] = 0;
 	while((SensorValue(rightEncoder) < distance) && !(!SensorValue(bumpFrontLeft) || !SensorValue(bumpFrontRight) || !SensorValue(followBump))) { //robot length around 160
-		motor[leftMotor] = -30;
-		motor[rightMotor] = 30;
+		motor[leftMotor] = -35;
+		motor[rightMotor] = 35;
 	}
 	motor[leftMotor] = 0;
 	motor[rightMotor] = 0;
@@ -133,7 +133,7 @@ void follow() {
 				turnLeft90(145);
 				moveForward(320);
 				if (SensorValue(sonar) > 40) {
-					turnLeft90(145);
+					turnLeft90(135);
 					moveForward(360);
 					break;
 				}
@@ -147,10 +147,10 @@ void follow() {
 				break;
 
 		case 6:
-			writeDebugStreamLine("Help I'm being oppressed.");
+			writeDebugStreamLine("Nudged a wall on my left.");
 				previousBehavior = 6;
 				moveBackward(20);
-				turnRight90(25);
+				turnRight90(22);
 				break;
 	}
 
