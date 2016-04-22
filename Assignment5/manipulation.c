@@ -1,9 +1,11 @@
 #pragma config(Sensor, dgtl1,  topen,          sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  rearArmBotSense, sensorNone)
 #pragma config(Sensor, dgtl4,  rearArmTopSense, sensorNone)
+#pragma config(Sensor, dgtl5,  sonar,          sensorSONAR_cm)
 #pragma config(Sensor, dgtl7,  armChanger,     sensorNone)
 #pragma config(Sensor, dgtl8,  botMotorButton, sensorNone)
 #pragma config(Sensor, dgtl9,  topMotorButton, sensorNone)
+#pragma config(Sensor, dgtl10, elbowBase,      sensorNone)
 #pragma config(Sensor, dgtl11, boten,          sensorQuadEncoder)
 #pragma config(Motor,  port8,           baseMotor,     tmotorVex393, openLoop)
 #pragma config(Motor,  port9,           elbowMotor,    tmotorVex393, openLoop)
@@ -11,17 +13,11 @@
 
 /*******************************************************************************/
 
-void takeDegrees(float deg) { //enter a value as a float, and this function will rotate the arm down that many degrees
-	SensorValue[boten] = 0;
-	while(abs(SensorValue[boten]) < (deg*4.3)) {
-			motor(baseMotor) = 120;
-		}
-	motor(baseMotor) = 0;
-}
+//float betaOne = 83; //angle between arm and ground when arm is at base line
 
-void takeDegreesTwo(float deg, int dir) { //base motor
+void baseMove(float deg, int dir) { //base motor
 	SensorValue[boten] = 0;
-	while(abs(SensorValue[boten]) < (deg*4.3)) {
+		while(abs(SensorValue[boten]) < (deg*4.3)) {
 			if (dir == 0) { //down
 				motor(baseMotor) = 120;
 			}
@@ -35,62 +31,131 @@ void takeDegreesTwo(float deg, int dir) { //base motor
 	motor(baseMotor) = 0;
 }
 
-void takeDegreesThree(float deg, int dir, string mot) { //top motor
+void elbowMove(float deg, int dir) { //top motor
 	SensorValue[topen] = 0;
-	while(abs(SensorValue[topen]) < (deg*23.497)) {
+	while(abs(SensorValue[topen]) < (deg * 23.497)) { //was previously 23.497
 			if (dir == 0) { //down
-				motor(mot) = 50;
+				motor(elbowMotor) = 50;
 			}
 			else if (dir == 1) { //up
-				motor(mot) = -50;
+				motor(elbowMotor) = -50;
 			}
 			else {
 				writeDebugStreamLine("Error, will not turn");
 			}
 		}
-	motor(baseMotor) = 0;
+	motor(elbowMotor) = 0;
 }
 
 
-int thetatwo(int x, int y, int l1, int l2){
-	return cos(90);
+
+float forwardKinY(float theta1, float theta2, float l1, float l2){
+	float alpha = PI - theta1 - theta2;
+	return (l1*sin(theta1)) + (l2 * sin(alpha));
 }
+
+float forwardKinX(float theta1, float theta2, float l1, float l2){
+	float alpha = PI - theta1 - theta2;
+	return (l1*cos(theta1)) - (l2 * cos(alpha));
+}
+
+float thetaTwo(float x, float y, float l1, float l2) {
+	float answer1 = (x*x)+(y*y)-(l1*l1)-(l2*l2);
+	float answer2 = answer1/(2*l1*l2);
+	float answer3 = acos(answer2);
+	return answer3;
+}
+
+
+float thetaOne(float x, float y, float theta2, float l2) {
+	float answer1 = l2*sin(theta2);
+	float answer2 = (x*x)+(y*y);
+	float answer3 = sqrt(answer2);
+	float answer4 = answer1/answer3;
+	float answer5= asin(answer4);
+	float answer6 = answer5;
+	float answer7 = y/x;
+	float answer8 = atan(answer7);
+	float answer9 = answer8;
+	float answer10 = answer9-answer6;
+	return answer10;
+}
+
+
+
+
+void baseline(){
+		while(SensorValue(armChanger) && (SensorValue(botMotorButton))){
+			motor(baseMotor) = 40;
+		}
+		motor(baseMotor) = 0;
+		while(SensorValue(elbowBase) && (SensorValue(botMotorButton) && SensorValue(topMotorButton))){
+			motor(elbowMotor) = -40;
+		}
+		motor(elbowMotor) = 0;
+}
+
+
+
+int nextCanX(){
+int sonarValue = SensorValue(sonar);
+sonarValue = sonarValue + 5;
+return sonarValue;
+}
+
+void move(float x, float y){
+float lowerArm = 37;
+float upperArm = 20;
+float t2 = thetaTwo(x,y,lowerArm,upperArm);
+float t1 = thetaOne(x,y,t2,upperArm);
+/*
+Hey guys I worked on this a lot (lot lot) afterwords and figured out how to get the correct angels
+THAT WE WANT TO BE AT. If you run this function it will walk you through the math and logic that
+Dr. Beer helped me understand. So before you change any of this or comment out the prints
+make sure to run it and understand it.
+*/
+writeDebugStreamLine("these are the values of theta one and theta two that our functions returned");
+writeDebugStreamLine("these are probably wrong because it wants to move into the table");
+writeDebugStreamLine("Theta One %f", (t1 * 57.3) );
+writeDebugStreamLine("Theta Two %f", (t2 * 57.3));
+writeDebugStreamLine("---------------------------------");
+writeDebugStreamLine("it is ok though we can fix them. First we need to fix theta one ");
+writeDebugStreamLine("we can fix theta one by mirroring it over the x axis and then adding");
+writeDebugStreamLine("angel formed by the right triangle mde by the x,y pair and the origin");
+writeDebugStreamLine("to find that angel we need to take the inverse tangent of y divide by x (soh cah toa)");
+float solve1 = y/x;
+writeDebugStreamLine("so we take y which is %f", y);
+writeDebugStreamLine("and divided by x which is %f", x);
+writeDebugStreamLine("which equals %f", solve1);
+float solve2 = atan(solve1);
+writeDebugStreamLine("now we take the arctangent and get %f", solve2 * 57.3);
+float thetaOneGoal  = (solve2* 2)+abs((t1));
+writeDebugStreamLine("great now we add the mirror starting answer (abs of theta1)");
+writeDebugStreamLine(" and twice the atan angle to get %f", thetaOneGoal * 57.3);
+writeDebugStreamLine("----------------------------------");
+//This will describe how to fix theta 2 im hoping i have time to do this one if not ill be back dont worry
+writeDebugStreamLine("lets fix theta2 now");
+writeDebugStreamLine("theta 2 has the same problem it is in the wrong quadrant");
+writeDebugStreamLine("all we need to do is flip the sign on theta2 really is that easy :)");
+float thetaTwoGoal = t2 * -1;
+writeDebugStreamLine("really! its %f", thetaTwoGoal *57.3);
+writeDebugStreamLine("lets check our answer with forward Kinematics");
+float theY = forwardKinY(thetaOneGoal, thetaTwoGoal, lowerArm, upperArm);
+float theX = forwardKinX(thetaOneGoal, thetaTwoGoal, lowerArm, upperArm);
+writeDebugStreamLine("checking our x we get %f", theX);
+writeDebugStreamLine("checking our y we get %f", theY);
+//baseMove(95 - (90 + (thetaOneGoal * 57.3)), 1);
+//elbowMove(90 + (270 - (thetaTwoGoal * 57.3)), 0);
+
+
+
+}
+
+//MAIN FUNCTION
 
 task main(){
-	while(true){
+	//please see the comment in the move function before you change anything.
+	move(35, 10);
 
-	string thing;
 
-		if (!SensorValue(armChanger)) {
-				thing = elbowMotor;
-		}
-
-		else{
-				thing = baseMotor;
-		}
-
-		writeDebugStreamLine("Encoder: %d", SensorValue(topen));
-
-		if (!SensorValue(rearArmTopSense)) {
-				SensorValue[topen] = 0;
-			}
-		else if (!SensorValue(rearArmBotSense)) {
-			takeDegreesThree(90.000, 0, thing);
-		}
-		else if ((!SensorValue(botMotorButton)) && (!SensorValue(topMotorButton)) && (!SensorValue(rearArmTopSense))) {
-		while(true){
-				motor(baseMotor) = 0;
-		}
-	}
-
-		else if (!SensorValue(botMotorButton)) {
-			motor(thing) = 50;
-		}
-		else if (!SensorValue(topMotorButton)) {
-			motor(thing) = -50;
-		}
-		else {
-			motor(thing) = 0;
-		}
-	}
 }
