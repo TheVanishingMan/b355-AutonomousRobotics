@@ -1,0 +1,86 @@
+
+
+void idiotTest(float x, float y){
+	float l1 = 37;
+	float l2 = 20;
+	float theta2 = thetaTwo(x, y, l1, l2);
+	float theta1 = thetaOne(x, y, theta2, l2);
+	float floor = 5;
+	SensorValue[boten] = 0;
+	SensorValue[topen] = 0;
+	motor[baseMotor] = 0;
+	motor[elbowMotor] = 0;
+	writeDebugStreamLine("Shoulder theta %d", shoulderTheta());
+	writeDebugStreamLine("theta One %d", theta1);
+	writeDebugStreamLine("Elbow theta %d", elbowTheta());
+	writeDebugStreamLine("theta Two %d", theta2);
+	wait10Msec(100);
+	while( shoulderTheta() > theta1){
+		writeDebugStreamLine("Shoulder theta %d", shoulderTheta());
+		writeDebugStreamLine("theta One %d", theta1);
+		if(floorCheck(floor, shoulderTheta(), elbowTheta(), l1, l2)){
+			break;
+		}
+		else{
+			motor[baseMotor] = -120;
+		}
+	}
+	motor[baseMotor] = 0;
+	SensorValue[topen] = 0;
+	writeDebugStreamLine("Elbow theta %d", elbowTheta());
+	writeDebugStreamLine("theta Two %d", theta2);
+
+	while(elbowTheta() < theta2){
+		writeDebugStreamLine("Elbow theta %d", elbowTheta());
+		writeDebugStreamLine("theta Two %d", theta2);
+		if(floorCheck(floor, shoulderTheta(), elbowTheta(), l1, l2)){
+			break;
+		}
+		else{
+			motor[elbowMotor] = 120;
+		}
+	}
+
+
+}
+
+bool floorCheck(float floor, float theta1, float theta2, float l1, float l2){
+	if(forwardKinY(theta1, theta2, l1, l2) <= floor){
+		motor[baseMotor] = 0;
+		motor[elbowMotor] = 0;
+		writeDebugStreamLine("DANGER WILL ROBINSON");
+		writeDebugStreamLine("Forward kin of Y %d", forwardKinY(theta1, theta2, l1, l2));
+		return true;
+	}
+
+	else{
+		return false;
+	}
+
+
+}
+
+
+//*************************************************************************************//
+//         moveToDegrees: specify end angles of the base and the elbow.                //
+//*************************************************************************************//
+void moveToDegrees(float baseAngle, float elbowAngle) { //baseAngle = thetaOne, elbowAngle = thetaTwo???
+        // sample input: moveToDegrees(45.000, 120.000);
+    SensorValue[boten] = 0; //corresponds to baseAngle
+    SensorValue[topen] = 0; //corresponds to elbowAngle
+    //baseline(); //make sure to baseline before running this function (elbow movement is most accurate at 0)
+    wait1Msec(1000);
+    baseAngle = 95 - baseAngle; //move to certain angle.
+    if ((baseAngle < 0) || (elbowAngle > 240)) {
+        writeDebugStreamLine("Illegal Move, beyond physical limits of device.");
+    }
+    while(abs(SensorValue[topen]) < (elbowAngle * 23.497)) {
+        motor(elbowMotor) = 50;
+    }
+    motor(elbowMotor) = 0;
+    while(abs(SensorValue[boten]) < (baseAngle * 4.3)) {
+        motor(baseMotor) = -50;
+    }
+    motor(baseMotor) = 0;
+}
+
